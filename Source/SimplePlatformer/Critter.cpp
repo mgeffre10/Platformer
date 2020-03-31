@@ -12,54 +12,13 @@ ACritter::ACritter()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	InitSkeletalMeshAssets();
-	DetermineSkeletalMesh();
-}
-
-void ACritter::InitSkeletalMeshAssets()
-{
+	// Creating a basic USceneComponent to set as the RootComponent
+	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+	// Creates skeletal mesh component and attaches it to RootComponent
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComponent"));
-	RootComponent = SkeletalMeshComponent;
+	SkeletalMeshComponent->SetupAttachment(GetRootComponent());
 
-	
-}
-
-void ACritter::DetermineSkeletalMesh()
-{
-	switch (CritterMesh)
-	{
-		case CritterType::Golem:
-		{
-			USkeletalMesh* GolemMesh = GetGolemSkeletalMesh();
-
-			if (GolemMesh != nullptr)
-			{
-				SkeletalMeshComponent->SetSkeletalMesh(GolemMesh);
-			}
-			break;
-		}
-		case CritterType::Gruntling:
-		{
-			USkeletalMesh* GruntlingMesh = GetGruntlingSkeletalMesh();
-
-			if (GruntlingMesh != nullptr)
-			{
-				SkeletalMeshComponent->SetSkeletalMesh(GruntlingMesh);
-			}
-			break;
-		}
-		case CritterType::Spiderling:
-		default:
-		{
-			USkeletalMesh* SpiderlingMesh = GetSpiderlingSkeletalMesh();
-
-			if (SpiderlingMesh != nullptr)
-			{
-				SkeletalMeshComponent->SetSkeletalMesh(SpiderlingMesh);
-			}
-			break;
-		}
-	}
+	Health = 100.f;
 }
 
 // Called when the game starts or when spawned
@@ -81,14 +40,4 @@ void ACritter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-}
-
-void ACritter::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	FName PropertyName = PropertyChangedEvent.GetPropertyName();
-
-	if (PropertyName == TEXT("CritterMesh"))
-	{
-		DetermineSkeletalMesh();
-	}
 }

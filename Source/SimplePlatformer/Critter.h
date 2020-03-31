@@ -34,29 +34,13 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY()
-	TEnumAsByte<CritterType> CritterMesh;
-
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	
 private:
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class USkeletalMeshComponent* SkeletalMeshComponent;
 
-	FORCEINLINE class USkeletalMesh* GetSpiderlingSkeletalMesh()
-	{
-		return LoadObject<USkeletalMesh>(NULL, TEXT("SkeletalMesh'/Game/InfinityBladeAdversaries/Enemy/Enemy_Spiderling/SK_Spiderling.SK_Spiderling'"), NULL, LOAD_None, NULL);
-	}
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float Health;
 
-	FORCEINLINE class USkeletalMesh* GetGolemSkeletalMesh()
-	{
-		return LoadObject<USkeletalMesh>(NULL, TEXT("SkeletalMesh'/Game/InfinityBladeAdversaries/Enemy/Enemy_Golem/SK_Fire_Golem.SK_Fire_Golem'"), NULL, LOAD_None, NULL);
-	}
-	FORCEINLINE class USkeletalMesh* GetGruntlingSkeletalMesh()
-	{
-		return LoadObject<USkeletalMesh>(NULL, TEXT("SkeletalMesh'/Game/InfinityBladeAdversaries/Enemy/Enemy_Gruntling/SK_Exodus_Gruntling.SK_Exodus_Gruntling'"), NULL, LOAD_None, NULL);
-	}
-
-	void InitSkeletalMeshAssets();
-	void DetermineSkeletalMesh();
+	FORCEINLINE void SetHealth(float Value) { Health = Value; }
+	FORCEINLINE float GetHealth() { return Health; }
 };
