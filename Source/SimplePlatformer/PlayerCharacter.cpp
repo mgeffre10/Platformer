@@ -2,6 +2,8 @@
 
 
 #include "PlayerCharacter.h"
+#include "GameFramework/Controller.h"
+#include "Components/InputComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -30,5 +32,30 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &APlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &APlayerCharacter::MoveRight);
 }
 
+void APlayerCharacter::MoveForward(float Value)
+{
+	if (Controller != nullptr && Value != 0.f)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		AddMovementInput(Direction, Value);
+	}
+}
+
+void APlayerCharacter::MoveRight(float Value)
+{
+	if (Controller != nullptr && Value != 0.f)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+
+		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		AddMovementInput(Direction, Value);
+	}
+}
