@@ -13,5 +13,6 @@ UCLASS()
 class SIMPLEPLATFORMER_API ASimplePlatformerGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+		ASimplePlatformerGameModeBase();
 };

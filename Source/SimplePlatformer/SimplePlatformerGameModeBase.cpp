@@ -2,4 +2,9 @@
 
 
 #include "SimplePlatformerGameModeBase.h"
+#include "PlayerCharacter.h"
 
+ASimplePlatformerGameModeBase::ASimplePlatformerGameModeBase()
+{
+	DefaultPawnClass = APlayerCharacter::StaticClass();
+}
