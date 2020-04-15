@@ -82,9 +82,13 @@ void ACustomPlatform::Tick(float DeltaTime)
 
 void ACustomPlatform::InitValues()
 {
+	// 1, 0, 0
 	MovementDirection = FVector(MovementDirectionX, MovementDirectionY, MovementDirectionZ);
 
+	// 20, 50, 300 + 400, 0, 0
 	MaxDistance = GetActorLocation() + (MovementDistance * MovementDirection);
+
+	//20, 50, 300
 	StartingLocation = GetActorLocation();
 
 	bShouldMove = true;
@@ -128,10 +132,11 @@ void ACustomPlatform::MovePlatform(float DeltaTime)
 {
 	FVector CurrentActorLocation = GetActorLocation();
 
-	FVector NewLocation = MovementDirection * ((Speed * MovementSpeedMultiplier) * DeltaTime);
-	CurrentActorLocation = CurrentActorLocation + (NewLocation * Direction);
-	SetActorLocation(CurrentActorLocation);
+	// Caculate the distance vector to add to current actor location and add it
+	CurrentActorLocation += MovementDirection * (((Speed * MovementSpeedMultiplier) * DeltaTime) * Direction);
 
+	SetActorLocation(CurrentActorLocation);
+	
 	if (HasReachedMaxDistance(CurrentActorLocation))
 	{
 		Direction = -Direction;
@@ -147,9 +152,9 @@ void ACustomPlatform::MovePlatform(float DeltaTime)
 
 bool ACustomPlatform::HasReachedMaxDistance(FVector CurrentLocation)
 {
-	if (HasAxisExceededMax(CurrentLocation.X, MaxDistance.X, StartingLocation.X)
-		|| HasAxisExceededMax(CurrentLocation.Y, MaxDistance.Y, StartingLocation.Y)
-		|| HasAxisExceededMax(CurrentLocation.Z, MaxDistance.Z, StartingLocation.Z))
+	if (HasAxisExceededMax(CurrentLocation.X, MaxDistance.X, StartingLocation.X, MovementDirectionX)
+		|| HasAxisExceededMax(CurrentLocation.Y, MaxDistance.Y, StartingLocation.Y, MovementDirectionY)
+		|| HasAxisExceededMax(CurrentLocation.Z, MaxDistance.Z, StartingLocation.Z, MovementDirectionZ))
 	{
 		return true;
 	}
@@ -157,26 +162,23 @@ bool ACustomPlatform::HasReachedMaxDistance(FVector CurrentLocation)
 	return false;
 }
 
-bool ACustomPlatform::HasAxisExceededMax(float CurrentAxisValue, float MaxAxisValue, float StartingAxisValue)
+bool ACustomPlatform::HasAxisExceededMax(float CurrentAxisValue, float MaxAxisValue, float StartingAxisValue, int AxisDirection)
 {
-	if (MaxAxisValue == StartingAxisValue)
+	if (MaxAxisValue == StartingAxisValue || AxisDirection == 0)
 	{
 		return false;
 	}
 
-	if (MaxAxisValue < 0 || StartingAxisValue > 0)
+	// Axis Direction is -1, 
+	// 100, 0 M < C < S
+
+	if (AxisDirection == -1)
 	{
-		if (CurrentAxisValue < MaxAxisValue || CurrentAxisValue > StartingAxisValue)
-		{
-			return true;
-		}
+		return MaxAxisValue > CurrentAxisValue || CurrentAxisValue > StartingAxisValue;
 	}
-	else if (MaxAxisValue > 0 || StartingAxisValue < 0)
+	else
 	{
-		if (CurrentAxisValue > MaxAxisValue || CurrentAxisValue < StartingAxisValue)
-		{
-			return true;
-		}
+		return MaxAxisValue < CurrentAxisValue || CurrentAxisValue < StartingAxisValue;
 	}
 
 	return false;

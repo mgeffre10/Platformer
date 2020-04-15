@@ -23,7 +23,7 @@ class SIMPLEPLATFORMER_API ACustomPlatform : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ACustomPlatform();
-
+	
 	UPROPERTY(VisibleDefaultsOnly, Category = "Platform Variables")
 	UStaticMeshComponent* StaticMesh;
 
@@ -88,7 +88,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	bool HasReachedMaxDistance(FVector CurrentLocation);
-	bool HasAxisExceededMax(float CurrentAxisValue, float MaxAxisValue, float StartingAxisValue);
+	bool HasAxisExceededMax(float CurrentAxisValue, float MaxAxisValue, float StartingAxisValue, int AxisDirection);
 
 	void MovePlatform(float DeltaTime);
 	void TriggerCountdownToMovement();
