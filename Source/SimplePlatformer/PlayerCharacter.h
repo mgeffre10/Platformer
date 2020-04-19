@@ -41,6 +41,13 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	FORCEINLINE void IncrementCoinCount() { CoinCount++; }
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE int32 GetCoinCount() { return CoinCount; }
+
 private:
 	
+	UPROPERTY()
+	int32 CoinCount;
 };

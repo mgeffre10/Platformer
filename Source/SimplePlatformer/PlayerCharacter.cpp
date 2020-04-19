@@ -38,6 +38,8 @@ APlayerCharacter::APlayerCharacter()
 	// Enable the play to rotate toward forward direction
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
+
+	CoinCount = 0;
 }
 
 // Called when the game starts or when spawned
