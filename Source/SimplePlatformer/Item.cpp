@@ -2,6 +2,7 @@
 
 
 #include "Item.h"
+#include "PlayerCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -58,17 +59,25 @@ void AItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItem::OnOverlapBegin()"));
 
-	if (OverlapParticleSystem)
+	if (OtherActor)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticleSystem, GetActorLocation());
-	}
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 
-	if (OverlapSound)
-	{
-		UGameplayStatics::PlaySound2D(this, OverlapSound);
-	}
+		if (PlayerCharacter)
+		{
+			if (OverlapParticleSystem)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticleSystem, GetActorLocation());
+			}
 
-	Destroy();
+			if (OverlapSound)
+			{
+				UGameplayStatics::PlaySound2D(this, OverlapSound);
+			}
+
+			Destroy();
+		}
+	}
 }
 
 void AItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
