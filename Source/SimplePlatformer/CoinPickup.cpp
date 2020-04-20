@@ -14,8 +14,6 @@ void ACoinPickup::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	Super::OnOverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	UE_LOG(LogTemp, Warning, TEXT("ACoinPickup::OnOverlapBegin()"));
-
 	if (OtherActor)
 	{
 		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
@@ -25,11 +23,4 @@ void ACoinPickup::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActo
 			PlayerCharacter->IncrementCoinCount();
 		}
 	}
-}
-
-void ACoinPickup::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	Super::OnOverlapEnd(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
-
-	UE_LOG(LogTemp, Warning, TEXT("ACoinPickup::OnOverlapEnd()"));
 }
