@@ -47,12 +47,18 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SpawnPos = GetActorLocation();
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (GetActorLocation().Z <= -500.f)
+	{
+		SetActorLocation(SpawnPos);
+	}
 
 }
 

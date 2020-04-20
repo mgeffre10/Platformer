@@ -21,6 +21,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* FollowCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning")
+	FVector SpawnPos;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
