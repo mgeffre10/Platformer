@@ -7,12 +7,14 @@
 #include "CustomPlatform.generated.h"
 
 UENUM()
-enum Size
+enum ESize
 {
-	Small UMETA(DisplayName = "Small"),
-	Medium UMETA(DisplayName = "Medium"),
-	Large UMETA(DisplayName = "Large"),
-	ExtraLarge UMETA(DisplayName = "ExtraLarge")
+	ES_Small UMETA(DisplayName = "Small"),
+	ES_Medium UMETA(DisplayName = "Medium"),
+	ES_Large UMETA(DisplayName = "Large"),
+	ES_ExtraLarge UMETA(DisplayName = "ExtraLarge"),
+
+	ES_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
 UCLASS()
@@ -23,9 +25,12 @@ class SIMPLEPLATFORMER_API ACustomPlatform : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ACustomPlatform();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+	class UBoxComponent* CollisionVolume;
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = "Platform Variables")
-	UStaticMeshComponent* StaticMesh;
+	class UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Platform Variables | Materials")
 	class UMaterial* DefaultMaterial;
@@ -37,7 +42,7 @@ public:
 	class UMaterial* FinalPlatformMaterial;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables")
-	TEnumAsByte<Size> PlatformSize;
+	TEnumAsByte<ESize> PlatformSize;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables", meta = (EditCondition = "!bIsFinalPlatform"))
 	bool bIsCheckpoint;
@@ -48,7 +53,7 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables | Movement")
 	bool bIsMoving;
 
-	// Below Properties shown only if bIsMoving is true
+	// Below Properties editable only if bIsMoving is true
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables | Movement", meta = (EditCondition = "bIsMoving", UIMin = "-1.0", UIMax = "1.0"))
 	int MovementDirectionX;
@@ -68,7 +73,7 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables | Movement", meta = (EditCondition = "bIsMoving") )
 	bool bShouldPauseBeforeMoving;
 
-	// Property should show only if bShouldPauseBeforeMoving is true
+	// Property should be editable only if bShouldPauseBeforeMoving is true
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Platform Variables | Movement", meta = (EditCondition = "bIsMoving && bShouldPauseBeforeMoving") )
 	int PauseTime;
 
@@ -94,7 +99,6 @@ protected:
 	void TriggerCountdownToMovement();
 	void InitValues();
 	void DeterminePlatformSize();
-	void DeterminePlatformDirection();
 
 public:	
 	// Called every frame
@@ -102,4 +106,9 @@ public:
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

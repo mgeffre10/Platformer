@@ -2,9 +2,11 @@
 
 
 #include "CustomPlatform.h"
+#include "Components/BoxComponent.h"
+
 #include "Components/StaticMeshComponent.h"
-#include "Components/ArrowComponent.h"
 #include "Materials/Material.h"
+#include "PlayerCharacter.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -15,35 +17,12 @@ ACustomPlatform::ACustomPlatform()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Initialize Static Mesh
+	CollisionVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionVolume"));
+	RootComponent = CollisionVolume;
+
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlatformStaticMesh"));
-	// Set StaticMesh mobility to Static
-	StaticMesh->SetMobility(EComponentMobility::Static);
-	// Set RootComponent to StaticMesh
-	RootComponent = StaticMesh;
+	StaticMesh->SetupAttachment(GetRootComponent());
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> DefaultMaterialAsset(TEXT("Material'/Game/StarterContent/Materials/M_Metal_Steel.M_Metal_Steel'"));
-	static ConstructorHelpers::FObjectFinder<UMaterial> CheckpointMaterialAsset(TEXT("Material'/Game/StarterContent/Materials/M_Tech_Hex_Tile.M_Tech_Hex_Tile'"));
-	static ConstructorHelpers::FObjectFinder<UMaterial> FinalPlatformMaterialAsset(TEXT("Material'/Game/StarterContent/Materials/M_Tech_Hex_Tile_Pulse.M_Tech_Hex_Tile_Pulse'"));
-
-	if (DefaultMaterialAsset.Succeeded())
-	{
-		DefaultMaterial = DefaultMaterialAsset.Object;
-	}
-
-	if (CheckpointMaterialAsset.Succeeded())
-	{
-		CheckpointPlatformMaterial = CheckpointMaterialAsset.Object;
-	}
-
-	if (FinalPlatformMaterialAsset.Succeeded())
-	{
-		FinalPlatformMaterial = FinalPlatformMaterialAsset.Object;
-	}
-
-	StaticMesh->SetMaterial(0, DefaultMaterial);
-	// Material for bIsCheckpoint
-	// Material for bIsFinalPlatform
 	bIsMoving = false;
 	bIsCheckpoint = false;
 	bIsFinalPlatform = false;
@@ -51,7 +30,7 @@ ACustomPlatform::ACustomPlatform()
 	MovementDirectionY = 0;
 	MovementDirectionZ = 0;
 	MovementDirection = FVector::ForwardVector;
-	PlatformSize = Size::Medium;
+	PlatformSize = ESize::ES_Medium;
 	MovementDistance = 400.0f;
 	MovementSpeedMultiplier = 1.0f;
 	bShouldPauseBeforeMoving = false;
@@ -66,6 +45,9 @@ void ACustomPlatform::BeginPlay()
 	Super::BeginPlay();
 
 	InitValues();
+
+	CollisionVolume->OnComponentBeginOverlap.AddDynamic(this, &ACustomPlatform::OnOverlapBegin);
+	CollisionVolume->OnComponentEndOverlap.AddDynamic(this, &ACustomPlatform::OnOverlapEnd);
 }
 
 // Called every frame
@@ -82,13 +64,10 @@ void ACustomPlatform::Tick(float DeltaTime)
 
 void ACustomPlatform::InitValues()
 {
-	// 1, 0, 0
 	MovementDirection = FVector(MovementDirectionX, MovementDirectionY, MovementDirectionZ);
 
-	// 20, 50, 300 + 400, 0, 0
 	MaxDistance = GetActorLocation() + (MovementDistance * MovementDirection);
 
-	//20, 50, 300
 	StartingLocation = GetActorLocation();
 
 	bShouldMove = true;
@@ -98,34 +77,27 @@ void ACustomPlatform::InitValues()
 		TimeRemaining = PauseTime;
 	}
 
-
 	DeterminePlatformSize();
-	DeterminePlatformDirection();
 }
 
 void ACustomPlatform::DeterminePlatformSize()
 {
 	FVector NewSize = FVector(1.0f);
 
-	if (PlatformSize == Size::Small)
+	if (PlatformSize == ESize::ES_Medium)
 	{
-		NewSize = FVector(0.5f);
+		NewSize = FVector(2.f);
 	}
-	else if(PlatformSize == Size::Large)
+	else if(PlatformSize == ESize::ES_Large)
 	{
-		NewSize = FVector(1.5f);
+		NewSize = FVector(3.f);
 	}
-	else if (PlatformSize == Size::ExtraLarge)
+	else if (PlatformSize == ESize::ES_ExtraLarge)
 	{
-		NewSize = FVector(2.0f);
+		NewSize = FVector(5.f);
 	}
 
 	SetActorScale3D(NewSize);
-}
-
-void ACustomPlatform::DeterminePlatformDirection()
-{
-
 }
 
 void ACustomPlatform::MovePlatform(float DeltaTime)
@@ -169,9 +141,6 @@ bool ACustomPlatform::HasAxisExceededMax(float CurrentAxisValue, float MaxAxisVa
 		return false;
 	}
 
-	// Axis Direction is -1, 
-	// 100, 0 M < C < S
-
 	if (AxisDirection == -1)
 	{
 		return MaxAxisValue > CurrentAxisValue || CurrentAxisValue > StartingAxisValue;
@@ -199,44 +168,71 @@ void ACustomPlatform::PostEditChangeProperty(struct FPropertyChangedEvent& Prope
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	FString PropertyName = PropertyChangedEvent.GetPropertyName().ToString();
-	// UE_LOG(LogTemp, Warning, TEXT("%s"), *PropertyName);
-	// If bIsMoving is changed, update mobility as necessary
-	if (PropertyName == TEXT("bIsMoving"))
+	
+	if (DefaultMaterial && CheckpointPlatformMaterial && FinalPlatformMaterial)
 	{
-		if (bIsMoving)
+		if (PropertyName == TEXT("bIsCheckpoint"))
 		{
-			StaticMesh->SetMobility(EComponentMobility::Movable);
+			if (bIsCheckpoint)
+			{
+				StaticMesh->SetMaterial(0, CheckpointPlatformMaterial);
+			}
+			else
+			{
+				StaticMesh->SetMaterial(0, DefaultMaterial);
+			}
 		}
-		else
+		else if (PropertyName == TEXT("bIsFinalPlatform"))
 		{
-			StaticMesh->SetMobility(EComponentMobility::Static);
+			if (bIsFinalPlatform)
+			{
+				StaticMesh->SetMaterial(0, FinalPlatformMaterial);
+			}
+			else
+			{
+				StaticMesh->SetMaterial(0, DefaultMaterial);
+			}
 		}
 	}
-	else if (PropertyName == TEXT("bIsCheckpoint"))
-	{
-		if (bIsCheckpoint)
-		{
-			StaticMesh->SetMaterial(0, CheckpointPlatformMaterial);
-		}
-		else
-		{
-			StaticMesh->SetMaterial(0, DefaultMaterial);
-		}
-	}
-	else if (PropertyName == TEXT("bIsFinalPlatform"))
-	{
-		if (bIsFinalPlatform)
-		{
-			StaticMesh->SetMaterial(0, FinalPlatformMaterial);
-		}
-		else
-		{
-			StaticMesh->SetMaterial(0, DefaultMaterial);
-		}
-	}
-	else if (PropertyName == TEXT("PlatformSize"))
+	
+	if (PropertyName == TEXT("PlatformSize"))
 	{
 		DeterminePlatformSize();
 	}
 }
 
+void ACustomPlatform::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (bIsCheckpoint)
+	{
+		if (OtherActor)
+		{
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+
+			if (PlayerCharacter)
+			{
+				PlayerCharacter->SpawnPos.X = GetActorLocation().X;
+				PlayerCharacter->SpawnPos.Y = GetActorLocation().Y;
+			}
+		}
+	}
+	else if (bIsFinalPlatform)
+	{
+		if (OtherActor)
+		{
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
+
+			if (PlayerCharacter)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Final Platform Detected!"));
+			}
+		}
+	}
+
+	
+}
+
+void ACustomPlatform::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+}
